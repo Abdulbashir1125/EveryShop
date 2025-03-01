@@ -12,7 +12,7 @@ const flash = require("express-flash");
 //connect to database
 connnectionDb();
 
-//middlewares, settings
+//middlewares, settings love
 app.set("layout", "layout/mainLayout");
 app.set("view engine", "ejs");
 app.use(
