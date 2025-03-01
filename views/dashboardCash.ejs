@@ -1,0 +1,195 @@
+<div class="success-message">👍👍Transactions Recorded Successfully 👍👍</div>
+
+<header class="header">
+  <div>
+    <h3>Welcome this is the Dashboard Page <%= name.toUpperCase() %></h3>
+  </div>
+  <div><a href="/transactions">Transactions</a></div>
+  <div></div>
+</header>
+
+<main class="cashier-breaks">
+  <div>
+    <form action="/searchProduct" method="post">
+      <div class="searchProduct">
+        <input type="text" name="search" id="" placeholder="Search Product" />
+
+        <div>
+          <button type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div>
+    <table>
+      <thead>
+        <th>Product name</th>
+        <th>Selling Price</th>
+        <th>Quantity</th>
+        <th>Add to Cart</th>
+      </thead>
+      <tbody>
+        <% products.forEach(element => { %>
+        <tr>
+          <td><%= element.productName %>,</td>
+          <td><%= element.salePrice %></td>
+          <td><%= element.quantity %></td>
+          <td>
+            <button data-id="<%= element.id %>" id="btnAdd">+</button>
+            &ensp;&ensp;&ensp;
+            <button data-id="<%= element.id %>" id="remove">--</button>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cart"></div>
+</main>
+
+<script>
+  const carts = document.querySelector(".cart");
+  async function Products() {
+    const response = await fetch("http://localhost:3000/getproducts", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    if (!data) {
+      return confirm("there is an error getting the products");
+    }
+    return data;
+  }
+
+  const cart = [];
+
+  const addbtn = document.querySelectorAll("#btnAdd");
+  const removebtn = document.querySelectorAll("#remove");
+
+  addbtn.forEach((each) => {
+    each.onclick = async () => {
+      console.log("clicked on +");
+      const products = await Products();
+      const id = each.getAttribute("data-id");
+
+      products.forEach((each) => {
+        if (each._id == id) {
+          const productName = each.productName;
+          const salePrice = each.salePrice;
+          const productid = each._id;
+          const quantity = each.quantity;
+
+          if (quantity < 1) {
+            return confirm("no item available");
+          }
+
+          const find = cart.find((each) => each.productid == productid);
+
+          if (find) {
+            if (find.quantity == quantity) {
+              return confirm("About to exceed available stocks");
+            } else {
+              return (find.quantity += 1);
+            }
+          }
+          console.log("inside two");
+          cart.unshift({ productid, productName, salePrice, quantity: 1 });
+        }
+      });
+      let show = "";
+      cart.forEach((each) => {
+        show += `<p><span> ${each.productName} - ${each.salePrice} - ${each.quantity}</span></p>`;
+      });
+      show += `<p> <button id="cashout">Cashout</button> </p>`;
+      carts.innerHTML = show;
+      const cashout = document.getElementById("cashout");
+
+      cashout.addEventListener("click", () => {
+        if (cart.length >= 1) {
+          const confirmation = confirm("cart is ready to cashout");
+          if (!confirmation) {
+            return;
+          }
+          cash(cart);
+        } else {
+          confirm("cart not ready");
+        }
+      });
+    };
+  });
+
+  function successMessage() {
+    const successbtn = document.querySelector(".success-message");
+    successbtn.classList.add("active");
+  }
+
+  removebtn.forEach((each) => {
+    each.onclick = async () => {
+      console.log("clicked on -");
+      const products = await Products();
+      const id = each.getAttribute("data-id");
+
+      products.forEach((each) => {
+        if (each._id == id) {
+          const productName = each.productName;
+          const salePrice = each.salePrice;
+          const productid = each._id;
+
+          const find = cart.find((each) => each.productid == productid);
+          if (find) {
+            if (find.quantity == 1) {
+              const index = cart.indexOf(find);
+
+              cart.splice(index, 1);
+            } else {
+              return (find.quantity -= 1);
+            }
+          }
+          // cart.unshift({ productid, productName, salePrice, quantity: 1 });
+        }
+      });
+      let show = "";
+      cart.forEach((each) => {
+        show += `<p><span> ${each.productName} - ${each.salePrice} - ${each.quantity}</span> `;
+      });
+      show += `<p> <button id="cashout">Cashout</button> </p>`;
+      carts.innerHTML = show;
+      const cashout = document.getElementById("cashout");
+
+      cashout.addEventListener("click", () => {
+        if (cart.length >= 1) {
+          confirm("cart is ready to cashout");
+          cash(cart);
+        } else {
+          confirm("cart not ready");
+        }
+      });
+    };
+  });
+
+  async function cash(cart) {
+    try {
+      const response = await fetch("http://localhost:3000/cashout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cart),
+      });
+
+      const data = await response.json();
+      console.log(data);
+      if (data) {
+        successMessage();
+        setTimeout(() => {
+          window.location.replace(window.location.href);
+        }, 2000);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+</script>

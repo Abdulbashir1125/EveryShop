@@ -1,0 +1,33 @@
+<%= id %>
+<form action="/update/<%= id %>" method="post">
+  <p>
+    <label for="">Name of Product</label>
+    <input type="text" name="productName" id="" value="<%= productName %>" />
+  </p>
+  <p>
+    <label for="">Quantity</label>
+    <input type="number" name="quantity" id="" value="<%= quantity %>" />
+  </p>
+  <p>
+    <label for="">Purchase Price</label>
+    <input
+      type="number"
+      name="purchasePrice"
+      placeholder="How much did you buy it?"
+      id=""
+      value="<%= purchasePrice %>"
+    />
+  </p>
+  <p>
+    <label for="">Sale Price</label>
+    <input
+      type="number"
+      name="salePrice"
+      placeholder="How much you selling it for?"
+      id=""
+      value="<%= salePrice %>"
+    />
+  </p>
+  <button type="submit">Update</button><br />
+  <a href="/viewProducts">Back</a>
+</form>

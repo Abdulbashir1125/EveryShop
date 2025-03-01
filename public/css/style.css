@@ -1,0 +1,161 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  background-color: #fff6ea;
+}
+body {
+  margin-top: 10px;
+  margin-left: 10px;
+}
+.template {
+  padding-inline: 10px;
+}
+h1,
+h2,
+h3,
+h4 {
+  color: #ba3b46;
+}
+.main {
+  margin-top: 20px;
+}
+.main h1 {
+  text-align: center;
+  color: brown;
+}
+.main button {
+  background-color: #cb6627;
+  color: #fff6da;
+  padding: 5px 7px;
+  border: 1 px solid brown;
+  border-radius: 10px;
+}
+
+.form-login-admin {
+  text-align: center;
+}
+.form-login-admin * {
+  margin-block: 5px;
+}
+.header {
+  display: grid;
+  grid-template-columns: 1fr 200px 200px;
+}
+
+.header div:nth-child(2) {
+  position: relative;
+}
+.logout-section {
+  position: absolute;
+  top: 0;
+  background: white;
+  min-height: 100px;
+  width: 80px;
+  display: none;
+  transition: display 1s;
+}
+
+.DashboardMain {
+  display: grid;
+  grid-template-columns: repeat(3, 200px);
+  gap: 10px;
+  margin-top: 20px;
+}
+.DashboardMain div {
+  padding: 5px;
+  height: 100px;
+  background-color: #fce1c3;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.DashboardMain div a,
+span,
+h2 {
+  color: black;
+  background-color: transparent;
+  text-decoration: none;
+}
+th {
+  padding: 10px;
+}
+
+.cashier-breaks {
+  display: flex;
+  flex-direction: column;
+  row-gap: 20px;
+}
+
+.cashier-breaks button {
+  padding: 3px 10px;
+  margin-bottom: 3px;
+}
+.cashier-breaks button:active {
+  padding: 2px 8px;
+  background: rgb(210, 112, 32);
+  color: white;
+}
+.searchProduct {
+  display: flex;
+  border: 1px solid black;
+  max-width: 20%;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.searchProduct input {
+  width: 100%;
+}
+.searchProduct button {
+  min-height: 100%;
+  background-color: #cb6627;
+  color: white;
+}
+
+.transactions {
+  display: flex;
+  justify-content: space-around;
+}
+.transactions td {
+  padding: 0px 10px;
+  text-align: right;
+}
+.success-message {
+  z-index: 10;
+  position: absolute;
+  top: 20px;
+  right: 10px;
+  height: 50px;
+  width: fit-content;
+  padding: 10px;
+  background-color: #cb6627;
+  color: white;
+  display: none;
+}
+
+.success-message.active {
+  display: initial;
+  animation: popping 1s infinite ease-in-out;
+}
+
+@keyframes popping {
+  0%,
+  100% {
+    transform: scale(1); /* Normal size */
+  }
+  50% {
+    transform: scale(1.1); /* Enlarges the element */
+  }
+}
+.profit {
+  color: green;
+}
+.no-tran {
+  display: flex;
+  justify-content: space-around;
+}
+.trr {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}

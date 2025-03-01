@@ -1,0 +1,57 @@
+<% if (all.length == 0) { %>
+<div class="no-tran">
+  <p style="margin-top: 20px; font-size: larger">
+    No Transactions for this Date
+  </p>
+  <form action="/filterBydate" method="post">
+    <input type="date" name="date" id="" />
+
+    <button type="submit">Search</button>
+  </form>
+</div>
+
+<% } else{%>
+
+<div class="transactions">
+  <div>
+    <table>
+      <thead>
+        <th>SalePerson_ID</th>
+        <th>Product Name</th>
+        <th>Quantity</th>
+        <th>Sale Price</th>
+
+        <th>Receipt</th>
+      </thead>
+      <tbody>
+        <% all.forEach(element => { %>
+        <tr>
+          <td><%= element.saleperson %></td>
+          <td><%= element.product %></td>
+          <td><%= element.quantity %></td>
+          <td><%= element.salePrice %></td>
+
+          <td>
+            <a href="/download/<%= element._id%>/<%= today %>">Download</a>
+          </td>
+
+          <% }) %>
+        </tr>
+        <td></td>
+        <td></td>
+        <td></td>
+
+        <td><strong>Total: <%= sumTotal %></strong></td>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <form action="/filterBydate" method="post">
+      <input type="date" name="date" id="" />
+
+      <button type="submit">Search</button>
+    </form>
+  </div>
+</div>
+<% } %>

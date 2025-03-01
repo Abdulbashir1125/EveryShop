@@ -1,0 +1,37 @@
+<main class="template main">
+  <h1>Every-Shop</h1>
+
+  <form action="/RegisterAdmin" method="post" class="form-login-admin">
+    <p>
+      <label for="">Full Name</label>
+      <input type="text" name="fullname" id="" />
+    </p>
+    <p>
+      <label for="">Username</label>
+      <input
+        type="text"
+        name="username"
+        id=""
+        placeholder="Email Style Please"
+      />
+    </p>
+    <p>
+      <label for="">Password</label>
+      <input type="password" name="password" id="" maxlength="7" placeholder="Maximum of 7 characters Please" />
+    </p>
+    
+      <label for="">Confirm-Password</label>
+      <input type="password" name="confirmpassword" id="" maxlength="7" />
+    </p>
+  
+
+    <p>
+        <div>Are you Sure you Want to give an Admin?</div>
+        Yes: <input type="radio" name="confirmrole" id="" value="yes" />
+        No: <input type="radio" name="confirmrole" id="" value="no" />
+    </p>
+   
+    <button type="submit">Register Admin</button><br>
+    <a href="/">Login</a>
+  </form>
+</main>

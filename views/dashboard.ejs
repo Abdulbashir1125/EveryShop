@@ -1,0 +1,67 @@
+<header class="header">
+  <div>
+    <h2>Welcome this is the Dashboard Page <%= name.toUpperCase() %></h2>
+  </div>
+  <div>
+    <div class="logout-section">
+      <a href="/logout">logout</a>
+    </div>
+  </div>
+</header>
+<main class="DashboardMain">
+  <div>
+    <a href="/viewProducts"
+      >View Products <br />
+      <br /><span><h2 id="total">0</h2></span></a
+    >
+  </div>
+  <div>
+    <a href="/numbers"
+      >View Transactions <br /><br /><span
+        ><h2 id="totalTransactions">0</h2></span
+      ></a
+    >
+  </div>
+
+  <div><a href="/addProducts">Add Product</a><br /></div>
+
+  <div><a href="/addAccount">Add Account</a></div>
+  <div>
+    <a href="/manageAccounts"> Manage Accounts</a>
+  </div>
+</main>
+
+<script>
+  async function getTotalProductNumbers() {
+    const totalHtml = document.querySelector("#total");
+    const response = await fetch("http://localhost:3000/totalProducts", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    totalHtml.innerHTML = data.total;
+  }
+  async function getDailyTransactions() {
+    const totalHtml = document.querySelector("#totalTransactions");
+    const response = await fetch(
+      "http://localhost:3000/totalDailyTransactions",
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    totalHtml.innerHTML = data.total;
+  }
+
+  getTotalProductNumbers();
+  getDailyTransactions();
+</script>

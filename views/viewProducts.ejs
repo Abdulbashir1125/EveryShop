@@ -1,0 +1,50 @@
+<a href="/addProducts">Add Products</a>
+<table>
+  <thead>
+    <th>Name of Products</th>
+    <th>Quantity</th>
+    <th>Purchase Price</th>
+    <th>Sale Price</th>
+    <th>Actions</th>
+  </thead>
+
+  <tbody>
+    <% products.forEach(element => { %>
+    <tr>
+      <td><%= element.productName%></td>
+      <td><%= element.quantity%></td>
+      <td><%= element.purchasePrice%></td>
+      <td><%= element.salePrice%></td>
+      <td>
+        <button><a href="/edit/<%= element.id %>">Edit</a></button
+        ><button>
+          <form id="form" method="post">
+            <input type="hidden" name="id" id="id" value="<%= element.id %>" />
+            <button type="submit">Delete</button>
+          </form>
+        </button>
+      </td>
+    </tr>
+
+    <% }) %>
+  </tbody>
+</table>
+
+<script>
+  const form = document.getElementById("form");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("id").value;
+    const check = confirm("are you sure you want to delete this Products");
+    if (!check) {
+      return;
+    }
+    const response = await fetch(`http://localhost:3000/delete/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const getr = await response.json();
+    console.log(getr);
+  });
+</script>

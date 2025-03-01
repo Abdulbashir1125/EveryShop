@@ -1,0 +1,39 @@
+<div>Add Accounts Page</div>
+<section>
+  <form action="/addAccount" method="post">
+    <p>
+      <label for="">Fullname</label>
+      <input type="text" name="fullname" id="" />
+    </p>
+    <p>
+      <label for="">Username</label>
+      <input type="text" name="username" id="" />
+    </p>
+    <p>
+      <label for="">Password</label>
+      <input
+        type="password"
+        name="password"
+        id=""
+        placeholder="password please"
+      />
+      <br />
+      <input
+        type="password"
+        name="confirmpassword"
+        id=""
+        placeholder="repeat password again please"
+      />
+    </p>
+    <p>
+      <label for="">Role</label>
+      <select name="role" id="">
+        <option value="">-select role please-</option>
+        <option value="cashier">cashier</option>
+        <option value="storekeeper">storekeeper</option>
+      </select>
+    </p>
+    <br />
+    <button type="submit">Create Account</button>
+  </form>
+</section>

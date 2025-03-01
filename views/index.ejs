@@ -1,0 +1,28 @@
+<% if (msg) { %>
+<h2><%= msg %></h2>
+<% } %>
+<main class="template main">
+  <h1 class="login">Login Interface</h1>
+  <form action="/loginR" method="post" class="form-login-admin">
+    <p>
+      <label for="">Username</label>
+      <input type="text" name="username" id="username " />
+    </p>
+    <p>
+      <label for="">Password</label>
+      <input type="password" name="password" id="password" maxlength="4" />
+    </p>
+    <button type="submit" id="login">Login</button><br />
+    <a href="Register">Register</a>
+  </form>
+</main>
+
+<script>
+  const btn = document.getElementById("login");
+  btn.onclick = () => {
+    const username = (document.getElementById("username").value = "");
+    const password = (document.getElementById("password").value = "");
+
+    console.log("clicked");
+  };
+</script>
