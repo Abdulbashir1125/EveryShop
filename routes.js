@@ -164,6 +164,8 @@ async function auth(req, res, next) {
   const id = decode.id;
   req.user = req.user || {};
   req.user.id = id;
+  const shopId = decode.shopId;
+  req.user.shopId = shopId;
   const findRole = await adminRegister.findById(id);
   const role = findRole.role;
   if (role !== "cashier") {
@@ -196,8 +198,10 @@ async function authAdmin(req, res, next) {
   }
 
   const id = decode.id;
+  const shopId = decode.shopId;
   req.user = req.user || {};
   req.user.id = id;
+  req.user.shopId = shopId;
   const findRole = await adminRegister.findById(id);
   const role = findRole.role;
   if (role !== "admin") {
@@ -218,52 +222,74 @@ routes.get("/", (req, res) => {
     msg: req.flash("msg"),
   });
 });
-routes.get("/totalProducts", async (req, res) => {
-  const products = await productsTable.find();
+routes.get("/totalProducts", authAdmin, async (req, res) => {
+  const shopId = req.user.shopId;
+  const products = await productsTable.find({ shopId });
+  if (!products || products.length == 0) {
+    return res.json({ total: 0 });
+  }
   let total = 0;
   for (const a of products) {
     total += a.quantity;
   }
   res.json({ total });
 });
-routes.get("/totalDailyTransactions", async (req, res) => {
-  const products = await sales.findOne({ dayDate: today });
+routes.get("/totalDailyTransactions", authAdmin, async (req, res) => {
+  const shopId = req.user.shopId;
+
+  const products = await sales.find({ dayDate: today });
+
   let total = 0;
   if (!products) {
     return res.json({ total: "0" });
   }
-  const productsList = products.sales;
+  if (products.length == 0) {
+    return res.json({ total: 0 });
+  }
+  const productsList = products[0].sales;
+
   for (const a of productsList) {
-    total += 1;
+    if (a.shopId !== undefined && a.shopId !== null) {
+      total += 1;
+    }
   }
 
   res.json({ total });
 });
 routes.get("/numbers", authAdmin, async (req, res) => {
+  const shopId = req.user.shopId;
+
   const AllSales = await sales.findOne({ dayDate: today });
-  console.log(AllSales);
-  if (AllSales == null) {
-    return res.render("transactionsAdmin", { all: [] });
-  }
+
   if (!AllSales) {
     return res.render("transactionsAdmin", { all: [] });
   }
   let originalItemTotal = 0;
   let sumTotal = 0;
   const ArrayListOfSales = AllSales.sales;
-  for (const each of ArrayListOfSales) {
-    sumTotal += Number(each.salePrice);
-    const idt = each.productId;
-    const quantity = each.quantity;
-    const findd = await productsTable.findById(idt);
-    const temptotal = findd.purchasePrice * quantity;
 
-    originalItemTotal += Number(temptotal);
+  const newArray = ArrayListOfSales.filter((each) => {
+    return each.shopId == shopId;
+  });
+
+  for (const each of newArray) {
+    if (each.shopId !== undefined && each.shopId !== null) {
+      sumTotal += Number(each.salePrice);
+      const idt = each.productId;
+      const quantity = each.quantity;
+      const findd = await productsTable.findById(idt);
+      const temptotal = findd.purchasePrice * quantity;
+      originalItemTotal += Number(temptotal);
+      const ip = each.saleperson;
+      const user = await returnname(ip);
+      each.names = user;
+    }
   }
+
   const profit = sumTotal - originalItemTotal;
-  console.log(originalItemTotal, profit);
+
   res.render("transactionsAdmin", {
-    all: AllSales.sales,
+    all: newArray,
     sumTotal,
     originalItemTotal,
     profit,
@@ -279,11 +305,15 @@ routes.get("/logout", (req, res) => {
   res.redirect("/");
 });
 routes.get("/download/:id/:date", auth, async (req, res) => {
+  const shopId = req.user.shopId;
   const id = req.params.id;
   const date = req.params.date;
-  console.log(date);
+
   const day = await sales.findOne({ dayDate: date });
-  const array = day.sales;
+  const arr = day.sales;
+  const array = arr.filter((each) => {
+    return each.shopId == shopId;
+  });
   const found = array.find((each) => each._id == id);
   res.setHeader("Content-Disposition", 'attachment; filename="products.pdf"');
   res.setHeader("Content-Type", "application/pdf");
@@ -299,11 +329,10 @@ routes.get("/download/:id/:date", auth, async (req, res) => {
 
   // **📌 Table Headers**
   doc.fontSize(9).text("Daily Receipt Every-Shop: ", col1, 50);
-  doc.fontSize(11).text("Date: ", col4, 50);
 
-  doc.text(`${date}`, 490, 50);
+  doc.text(`${date}`, 160, 50);
 
-  doc.fontSize(11).text("ID", col1, tableTop);
+  doc.fontSize(9).text("ID", col1, tableTop);
   doc.text("Sale Person", col2, tableTop);
   doc.text("Product ID", col3, tableTop);
   doc.text("Quantity", col4, tableTop);
@@ -330,10 +359,14 @@ routes.get("/download/:id/:date", auth, async (req, res) => {
 });
 
 routes.get("/totaldownload/:id", authAdmin, async (req, res) => {
+  const shopId = req.user.shopId;
   const id = req.params.id;
   console.log(id);
   const day = await sales.findOne({ dayDate: id });
-  const list = day.sales;
+  const dayy = day.sales;
+  const list = dayy.filter((each) => {
+    return each.shopId == shopId;
+  });
   const doc = new pdf();
   const idd = Date.now();
 
@@ -427,6 +460,7 @@ routes.get("/addAccount", authAdmin, (req, res) => {
 });
 
 routes.post("/searchProduct", auth, async (req, res, next) => {
+  const shopId = req.user.shopId;
   const searched = req.body.search;
   if (!searched) {
     return res.redirect("/dashboardCash");
@@ -435,6 +469,7 @@ routes.post("/searchProduct", auth, async (req, res, next) => {
   const find = await productsTable
     .find({
       productName: { $regex: searched, $options: "i" },
+      shopId,
     })
     .sort({ dateofCreation: -1 });
   if (!find) {
@@ -448,6 +483,7 @@ routes.post("/searchProduct", auth, async (req, res, next) => {
   });
 });
 routes.post("/filterBydate", auth, async (req, res, next) => {
+  const shopId = req.user.shopId;
   const searched = req.body.date;
   console.log(searched);
   if (!searched) {
@@ -464,7 +500,9 @@ routes.post("/filterBydate", auth, async (req, res, next) => {
     return res.render("transactions", { all: [] });
   }
 
-  const result = find[0].sales;
+  const results = find[0].sales;
+  const result = results.filter((each) => each.shopId == shopId);
+
   if (!result) {
     const err = new customError("not found", 401, "Mssing fields");
     return next(err);
@@ -473,7 +511,7 @@ routes.post("/filterBydate", auth, async (req, res, next) => {
 });
 routes.post("/filterBydateAdmin", authAdmin, async (req, res, next) => {
   const searched = req.body.date;
-
+  const shopId = req.user.shopId;
   console.log(searched);
   if (!searched) {
     return res.redirect("/transactionsAdmin");
@@ -490,8 +528,10 @@ routes.post("/filterBydateAdmin", authAdmin, async (req, res, next) => {
     return res.render("transactionsAdmin", { all: [] });
   }
 
-  const result = find[0].sales;
-  console.log(result);
+  const results = find[0].sales;
+  const result = results.filter((each) => each.shopId == shopId);
+  const newResult = result.map((each) => {});
+
   if (!result) {
     const err = new customError("not found", 401, "Mssing fields");
     return next(err);
@@ -499,9 +539,13 @@ routes.post("/filterBydateAdmin", authAdmin, async (req, res, next) => {
 
   let sumTotal = 0;
   let originalItemTotal = 0;
+
   for (const each of result) {
     sumTotal += Number(each.salePrice);
     const idt = each.productId;
+    const idd = each.saleperson;
+    const names = await returnname(idd);
+    each.names = names;
 
     const quantity = each.quantity;
     if (!idt) {
@@ -515,7 +559,7 @@ routes.post("/filterBydateAdmin", authAdmin, async (req, res, next) => {
       return;
     }
     const findd = await productsTable.findById(idt);
-    console.log(findd);
+
     if (!("purchasePrice" in findd)) {
       findd.purchasePrice = Number(findPurchasePrice(idt));
     }
@@ -524,7 +568,7 @@ routes.post("/filterBydateAdmin", authAdmin, async (req, res, next) => {
     originalItemTotal += Number(temptotal);
   }
   const profit = sumTotal - originalItemTotal;
-  console.log(originalItemTotal, profit);
+
   res.render("transactionsAdmin", {
     all: result,
     sumTotal,
@@ -533,11 +577,15 @@ routes.post("/filterBydateAdmin", authAdmin, async (req, res, next) => {
     today: searched,
   });
 });
-
+async function returnname(id) {
+  const all = await adminRegister.findById(id);
+  return all.fullname;
+}
 routes.get("/addAccount", authAdmin, (req, res) => {
   res.render("addAccount");
 });
 routes.get("/transactions", auth, async (req, res) => {
+  const shopId = req.user.shopId;
   const AllSales = await sales.findOne({ dayDate: today });
   console.log(AllSales);
   if (!AllSales) {
@@ -545,21 +593,35 @@ routes.get("/transactions", auth, async (req, res) => {
   }
   let sumTotal = 0;
   const ArrayListOfSales = AllSales.sales;
-  ArrayListOfSales.forEach((each) => {
+  const newArray = ArrayListOfSales.filter((each) => each.shopId == shopId);
+  newArray.forEach((each) => {
     sumTotal += Number(each.salePrice);
   });
   console.log(sumTotal);
-  res.render("transactions", { all: AllSales.sales, sumTotal, today });
+  res.render("transactions", { all: newArray, sumTotal, today });
 });
 routes.get("/viewProducts", authAdmin, async (req, res) => {
-  const getall = await productsTable.find().sort({ dateofCreation: -1 });
+  const shopId = req.user.shopId;
+
+  const getall = await productsTable
+    .find({ shopId })
+    .sort({ dateofCreation: -1 });
 
   res.render("viewProducts", { products: getall });
 });
 routes.get("/edit/:id", authAdmin, async (req, res) => {
+  const shopId = req.user.shopId;
   const id = req.params.id;
-  const findP = await productsTable.findById(id);
-  console.log(findP);
+  const findP = await productsTable.findOne({ _id: id, shopId: shopId });
+  if (!findP) {
+    const err = new customError(
+      "something wrong getting the products",
+      401,
+      "Mssing fields"
+    );
+    return next(err);
+  }
+
   res.render("oneproduct", {
     id: findP._id,
     productName: findP.productName,
@@ -570,6 +632,7 @@ routes.get("/edit/:id", authAdmin, async (req, res) => {
 });
 
 routes.post("/cashout", auth, (req, res) => {
+  const shopId = req.user.shopId;
   const user = req.user.id;
   const cashout = req.body;
   cashout.forEach(async (each) => {
@@ -593,6 +656,7 @@ routes.post("/cashout", auth, (req, res) => {
       saleperson: user,
       quantity,
       salePrice: totalSalePrice,
+      shopId,
     };
 
     const addToSales = await sales.findOneAndUpdate(
@@ -607,6 +671,7 @@ routes.post("/cashout", auth, (req, res) => {
 });
 routes.post("/addAccount", authAdmin, async (req, res, next) => {
   try {
+    const shopId = req.user.shopId;
     const { fullname, username, password, confirmpassword, role } = req.body;
     if (!fullname || !username || !password || !confirmpassword || !role) {
       const err = new customError(
@@ -629,8 +694,9 @@ routes.post("/addAccount", authAdmin, async (req, res, next) => {
       username,
       password: hashedpassword,
       role,
+      shopId,
     });
-    res.json(createAccount);
+    res.redirect("/dashboard");
   } catch (e) {
     // const err = new customError(
     //   "having trouble finding product to delete",
@@ -643,10 +709,14 @@ routes.post("/addAccount", authAdmin, async (req, res, next) => {
 
 routes.post("/update/:id", authAdmin, async (req, res) => {
   const id = req.params.id;
+  const shopId = req.user.shopId;
+
+  const findP = await productsTable.findOne({ _id: id, shopId: shopId });
+
   const { productName, quantity, purchasePrice, salePrice } = req.body;
-  const update = await productsTable.findByIdAndUpdate(
-    id,
-    { productName, quantity, purchasePrice, salePrice },
+  const update = await productsTable.findOneAndUpdate(
+    { _id: id, shopId: shopId },
+    { $set: { productName, quantity, purchasePrice, salePrice } },
     { new: true }
   );
   res.redirect("/viewProducts");
@@ -654,8 +724,9 @@ routes.post("/update/:id", authAdmin, async (req, res) => {
 
 routes.post("/delete/:id", authAdmin, async (req, res) => {
   const id = req.params.id;
+  const shopId = req.user.shopId;
   const deleted = await productsTable.findByIdAndDelete(id);
-  console.log(deleted);
+
   if (!deleted) {
     const err = new customError(
       "having trouble finding product to delete",
@@ -670,7 +741,19 @@ routes.post("/delete/:id", authAdmin, async (req, res) => {
 routes.get("/dashboard", authAdmin, async (req, res) => {
   try {
     const id = req.user.id;
+    const shopId = req.user.shopId;
+
+    if (!id || !shopId) {
+      const err = new customError(
+        "Key parameter missing (id or shopID)",
+        401,
+        "nope found"
+      );
+      return next(err);
+    }
+
     const findall = await adminRegister.findById(id);
+
     if (!findall) {
       const err = new customError(
         "not email like this is found",
@@ -679,8 +762,24 @@ routes.get("/dashboard", authAdmin, async (req, res) => {
       );
       return next(err);
     }
-
-    res.render("dashboard", { name: findall.username });
+    if ("shopId" in findall) {
+    } else {
+      const err = new customError(
+        "not authorised: no shop id",
+        401,
+        "nope found"
+      );
+      return next(err);
+    }
+    if (findall.shopId !== shopId) {
+      const err = new customError(
+        "not authorised: no shop id",
+        401,
+        "nope found"
+      );
+      return next(err);
+    }
+    res.render("dashboard", { name: findall.username, shopId: findall.shopId });
   } catch (err) {
     console.log(err);
   }
@@ -688,9 +787,10 @@ routes.get("/dashboard", authAdmin, async (req, res) => {
 routes.get("/dashboardCash", auth, async (req, res) => {
   try {
     const id = req.user.id;
+    const shopId = req.user.shopId;
     const findall = await adminRegister.findById(id);
     const findallProducts = await productsTable
-      .find()
+      .find({ shopId: shopId })
       .sort({ dateofCreation: -1 });
     if (!findall) {
       const err = new customError(
@@ -735,11 +835,19 @@ routes.post("/loginR", async (req, res, next) => {
       req.flash("msg", "Password Incorrect");
       return res.redirect("/");
     }
+    if (!findEmail.shopId) {
+      req.flash("msg", "Outdated User");
+      return res.redirect("/");
+    }
 
     //login logic with json web token
-    const sign = jwt.sign({ id: findEmail._id }, process.env.SECRET, {
-      expiresIn: "1h",
-    });
+    const sign = jwt.sign(
+      { id: findEmail._id, shopId: findEmail.shopId },
+      process.env.SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     //storing the cookie in my browser but not accessible to javascript
     res.cookie("token", sign, { httpOnly: true });
@@ -759,7 +867,7 @@ routes.post("/loginR", async (req, res, next) => {
 });
 
 //register admin
-routes.post("/RegisterAdmin", authAdmin, async (req, res, next) => {
+routes.post("/RegisterAdmin", async (req, res, next) => {
   try {
     const { fullname, username, password, confirmpassword, confirmrole } =
       req.body;
@@ -792,27 +900,30 @@ routes.post("/RegisterAdmin", authAdmin, async (req, res, next) => {
 
     //encrypted password
     const encPassword = bcrypt.hashSync(password, 10);
-
+    const shopId = "shop" + Date.now();
     const newAdmin = await adminRegister.create({
       fullname,
       username,
+      shopId,
       password: encPassword,
       role: "admin",
     });
 
-    res.json({ newAdmin });
+    res.redirect("/");
   } catch (err) {
     next(err);
   }
 });
 
 routes.post("/addproducts", authAdmin, async (req, res) => {
+  const shopId = req.user.shopId;
   const { productName, quantity, purchasePrice, salePrice } = req.body;
   const save = await productsTable.create({
     productName,
     quantity,
     purchasePrice,
     salePrice,
+    shopId,
   });
   if (!save) {
     const err = new customError(

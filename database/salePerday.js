@@ -4,6 +4,7 @@ const schemasaleitem = new mongooose.Schema({
   product: { type: String, required: true },
   productId: { type: String, required: true },
   saleperson: { type: String, required: true },
+  shopId: { type: String, required: true },
   quantity: { type: Number, required: true },
   salePrice: { type: Number, required: true },
 });

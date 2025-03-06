@@ -5,6 +5,7 @@ const schema = new mongooose.Schema({
   quantity: { type: Number, required: true },
   purchasePrice: { type: Number, required: true },
   salePrice: { type: Number, required: true },
+  shopId: { type: String, required: true },
   dateofCreation: { type: Date, default: Date.now },
 });
 

@@ -1,3 +1,6 @@
+<% if (products.length ==0) { %>
+<div>No products</div>
+<% }else{ %>
 <a href="/addProducts">Add Products</a>
 <table>
   <thead>
@@ -29,6 +32,7 @@
     <% }) %>
   </tbody>
 </table>
+<% } %>
 
 <script>
   const form = document.getElementById("form");
